@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart';
+import 'package:provider/provider.dart';
 import 'package:wri_fluter/models/trxModel.dart';
+import 'package:wri_fluter/provider/trxProvider.dart';
 import 'package:wri_fluter/services/trxService.dart';
 
 class Addtransactionsheet extends StatefulWidget {
@@ -19,6 +22,12 @@ class Addtransactionsheet extends StatefulWidget {
 }
 
 class _AddtransactionsheetState extends State<Addtransactionsheet> {
+  final titleController = TextEditingController();
+  final amountController = TextEditingController();
+  final noteController = TextEditingController();
+  DateTime selectedDate = DateTime.now();
+  TransactionType selectedType = TransactionType.income;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -40,24 +49,27 @@ class _AddtransactionsheetState extends State<Addtransactionsheet> {
             _buldTypeToggle(theme),
             const SizedBox(height: 16),
             _buildTextField(
+              controller: titleController,
               label: "Nama Transaksi",
               hint: "Misalnya: Gaji Bulanan",
             ),
             const SizedBox(height: 12),
             _buildTextField(
+              controller: amountController,
               label: "Jumlah",
               hint: "Masukkan jumlah transaksi",
               keyboardType: TextInputType.number,
             ),
             SizedBox(height: 12),
             _buildTextField(
+              controller: noteController,
               label: "Catatan (Opsional)",
               hint: "Misalnya: Gaji bulan Oktober",
             ),
             const SizedBox(height: 12),
             _buildDatePicker(theme),
             const SizedBox(height: 24),
-            _buildSubmitButton(theme),
+            _buildSubmitButton(theme, context),
             SizedBox(height: bottomInset), // Tambahkan padding untuk keyboard
           ],
         ),
@@ -96,37 +108,55 @@ class _AddtransactionsheetState extends State<Addtransactionsheet> {
       child: Row(
         children: [
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color.fromARGB(255, 19, 163, 6),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                "Pemasukan",
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedType = TransactionType.income;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: selectedType == TransactionType.income
+                      ? const Color.fromARGB(255, 19, 163, 6)
+                      : theme.colorScheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "Pemasukan",
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
           ),
           Expanded(
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              decoration: BoxDecoration(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                "Pengeluaran",
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.normal,
-                  fontSize: 14,
+            child: GestureDetector(
+              onTap: () {
+                setState(() {
+                  selectedType = TransactionType.expense;
+                });
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: selectedType == TransactionType.expense
+                      ? const Color.fromARGB(255, 19, 163, 6)
+                      : theme.colorScheme.surfaceVariant,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  "Pengeluaran",
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -137,12 +167,14 @@ class _AddtransactionsheetState extends State<Addtransactionsheet> {
   }
 
   Widget _buildTextField({
+    required TextEditingController controller,
     required String label,
     required String hint,
     TextInputType? keyboardType,
   }) {
     final theme = Theme.of(context);
     return TextFormField(
+      controller: controller,
       keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
@@ -172,18 +204,40 @@ class _AddtransactionsheetState extends State<Addtransactionsheet> {
         children: [
           Icon(Icons.calendar_today, color: Colors.white70, size: 18),
           const SizedBox(width: 8),
-          const Text('19-10-2024'),
+          Text(
+            selectedDate.toString().split(' ')[0],
+            style: theme.textTheme.bodyMedium,
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildSubmitButton(ThemeData theme) {
+  Future submitTransaction(BuildContext context) async {
+    // final provider = Provider.of<TransactionProvider>(context, listen: false);
+    await context.read<TransactionProvider>().addTransaction(
+      titleController.text,
+      amountController.text,
+      selectedDate.toIso8601String(),
+      selectedType,
+      noteController.text,
+    );
+    Navigator.of(context).pop();
+  }
+
+  Widget _buildSubmitButton(ThemeData theme, BuildContext context) {
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: FilledButton(
-        onPressed: () {},
+        onPressed: () {
+          // print("Title: ${titleController.text}");
+          // print("Amount: ${amountController.text}");
+          // print("Note: ${noteController.text}");
+          // print("Date: ${selectedDate.toIso8601String()}");
+          // print("Type: ${selectedType.name}");
+          submitTransaction(context);
+        },
         style: FilledButton.styleFrom(
           backgroundColor: const Color.fromARGB(255, 19, 163, 6),
           shape: RoundedRectangleBorder(

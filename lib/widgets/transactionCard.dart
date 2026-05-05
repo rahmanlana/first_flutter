@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:wri_fluter/models/trxModel.dart';
 
 class Transactioncard extends StatelessWidget {
-  const Transactioncard({super.key});
-  const Transactioncard.fromModel({super.key});
+  final TransactionModel? trx;
+  const Transactioncard({super.key, this.trx});
 
   @override
   Widget build(BuildContext context) {
@@ -48,19 +49,19 @@ class Transactioncard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        "Gaji Bulanan",
+                        trx?.title ?? "Title",
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       Text(
-                        "catatan",
+                        trx?.note ?? "catatan",
                         style: theme.textTheme.bodySmall?.copyWith(
                           fontWeight: FontWeight.normal,
                         ),
                       ),
                       Text(
-                        "20 September 2024",
+                        trx?.date.toString() ?? "20 September 2024",
                         style: theme.textTheme.bodySmall?.copyWith(
                           color: Colors.white70,
                         ),
@@ -70,7 +71,7 @@ class Transactioncard extends StatelessWidget {
                 ],
               ),
               Text(
-                "+15.000.000",
+                trx?.amount.toString() ?? "+15.000.000",
                 style: theme.textTheme.bodyMedium?.copyWith(
                   color: Colors.green,
                   fontWeight: FontWeight.bold,

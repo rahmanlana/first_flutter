@@ -15,7 +15,7 @@ class TransactionService {
   }
 
   Future<void> add(TransactionModel trx) async {
-    final res = await http.post(
+    await http.post(
       Uri.parse(baseUrl),
       headers: {"Content-Type": "application/json"},
       body: jsonEncode(trx.toJson()),

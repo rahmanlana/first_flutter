@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:wri_fluter/provider/trxProvider.dart';
 import 'package:wri_fluter/widgets/SummaryCard.dart';
 import 'package:wri_fluter/widgets/addTransactionSheet.dart';
 import 'package:wri_fluter/widgets/transactionCard.dart';
@@ -18,14 +20,20 @@ class _HomepageState extends State<Homepage> {
   @override
   initState() {
     super.initState();
-    getTransactions();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Provider.of<TransactionProvider>(
+        context,
+        listen: false,
+      ).loadTransactions();
+    });
+    // getTransactions();
   }
 
-  getTransactions() async {
-    final data = await trxService.getAll();
-    setState(() => transactions.addAll(data));
-    print(transactions.length);
-  }
+  // getTransactions() async {
+  //   final data = await trxService.getAll();
+  //   setState(() => transactions.addAll(data));
+  //   print(transactions.length);
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -33,20 +41,21 @@ class _HomepageState extends State<Homepage> {
       appBar: AppBar(title: const Text('Personal Finance')),
       body: SafeArea(
         child: SingleChildScrollView(
-          child: Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                SummaryCard(),
-                const SizedBox(height: 16),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  itemCount: transactions.length,
-                  itemBuilder: (_, i) => Transactioncard(),
-                ),
-              ],
-            ),
+          child: Consumer<TransactionProvider>(
+            builder: (context, provider, _) {
+              if (provider.isLoading) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return Column(
+                children: [
+                  SummaryCard(),
+                  const SizedBox(height: 16),
+                  ...provider.transactions
+                      .map((e) => Transactioncard(trx: e))
+                      .toList(),
+                ],
+              );
+            },
           ),
         ),
       ),
